@@ -1,103 +1,307 @@
-import Image from "next/image";
+// 파일 경로: src/app/page.tsx (최종 완성본)
 
-export default function Home() {
+'use client';
+
+import { useState, useEffect, FormEvent } from 'react';
+import Image from 'next/image';
+
+// --- 타입 정의 ---
+interface User {
+  logged_in: boolean;
+  email?: string;
+}
+
+interface Memory {
+  id: number;
+  content: string;
+  image_filename: string | null;
+  created_at: string;
+}
+
+interface AuthFormProps {
+  onAuthSuccess: () => void;
+}
+
+interface MemorySectionProps {
+  userEmail: string;
+  onLogout: () => void;
+}
+
+interface MemoriesListProps {
+    memories: Memory[];
+}
+
+interface MemoryFormProps {
+    onMemoryCreated: () => void;
+}
+
+// --- 컴포넌트들 ---
+
+function AuthForm({ onAuthSuccess }: AuthFormProps) {
+  const [isRegister, setIsRegister] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const target = event.target as HTMLFormElement;
+    const email = (target.elements.namedItem('email') as HTMLInputElement).value;
+    const password = (target.elements.namedItem('password') as HTMLInputElement).value;
+    const url = isRegister ? '/api/register' : '/api/login';
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    setMessage(data.message || data.error);
+
+    if (response.ok) {
+        if (isRegister) {
+            target.reset(); 
+            setMessage('회원가입 성공! 이제 로그인해주세요.');
+        } else {
+            onAuthSuccess();
+        }
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-xl">
+        <h2 className="text-2xl font-bold text-center text-gray-900">
+          {isRegister ? '회원가입' : 'Memento Mori'}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              이메일
+            </label>
+            <input 
+              id="email"
+              type="email" 
+              name="email" 
+              placeholder="you@example.com" 
+              required 
+              autoComplete="off" 
+              className="mt-1 w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+          <div>
+            <label htmlFor="password"  className="block text-sm font-medium text-gray-700">
+              비밀번호
+            </label>
+            <input 
+              id="password"
+              type="password" 
+              name="password" 
+              placeholder="••••••••" 
+              required 
+              autoComplete="off" 
+              className="mt-1 w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <button 
+              type="submit"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {isRegister ? '회원가입하기' : '로그인하기'}
+            </button>
+          </div>
+        </form>
+        <p className="text-center text-red-500 text-sm h-4">{message}</p>
+        <p className="text-center text-sm">
+          <button 
+            onClick={() => { setIsRegister(!isRegister); setMessage(''); }}
+            className="font-medium text-indigo-600 hover:text-indigo-500"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            {isRegister ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}
+          </button>
+        </p>
+      </div>
     </div>
+  );
+}
+
+function MemoryForm({ onMemoryCreated }: MemoryFormProps) {
+  const [message, setMessage] = useState('');
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const content = formData.get('content') as string;
+    const image = formData.get('image') as File;
+    if (!content.trim() && (!image || image.size === 0)) {
+        setMessage('내용 또는 이미지를 입력/선택해주세요.');
+        return;
+    }
+    setMessage('기록 중...');
+    const response = await fetch('/api/memories', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    setMessage(data.message || data.error);
+    if (response.ok) {
+      (event.target as HTMLFormElement).reset();
+      onMemoryCreated();
+    }
+  };
+
+  return (
+    <section className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-lg shadow-xl">
+      <h2 className="text-xl font-bold text-gray-800">새로운 기억을 기록하세요</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <textarea 
+            name="content" 
+            rows={5} 
+            placeholder="오늘을 기억하고 싶은 순간을 기록하세요..."
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          ></textarea>
+        </div>
+        <div>
+          <input 
+            type="file" 
+            name="image" 
+            accept="image/*" 
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+          />
+        </div>
+        <div>
+          <button 
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            기억 기록하기
+          </button>
+        </div>
+      </form>
+      <p className="text-center text-sm h-4">{message}</p>
+    </section>
+  );
+}
+
+function MemoriesList({ memories }: MemoriesListProps) {
+  if (memories.length === 0) {
+    return (
+        <div className="text-center py-10 px-6 bg-white rounded-lg shadow-xl">
+            <h3 className="text-lg font-medium text-gray-700">기록된 기억이 아직 없습니다.</h3>
+            <p className="mt-1 text-sm text-gray-500">첫 번째 기억을 기록해보세요!</p>
+        </div>
+    );
+  }
+  
+  return (
+    <div className="w-full max-w-2xl space-y-6">
+      {memories.map(memory => (
+        <div key={memory.id} className="bg-white p-6 rounded-lg shadow-xl overflow-hidden">
+          {memory.image_filename && (
+            <div className="mb-4">
+                <Image 
+                src={`/uploads/${memory.image_filename}`} 
+                alt="기억 이미지"
+                width={600}
+                height={400}
+                className="w-full h-auto object-cover rounded-md"
+                priority
+                />
+            </div>
+          )}
+          <p className="text-gray-800 whitespace-pre-wrap">{memory.content}</p>
+          <span className="block text-right text-xs text-gray-400 mt-4">
+            {new Date(memory.created_at).toLocaleString()}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MemorySection({ userEmail, onLogout }: MemorySectionProps) {
+    const [memories, setMemories] = useState<Memory[] | null>(null);
+    const fetchMemories = async () => {
+        const response = await fetch('/api/memories');
+        if (response.ok) {
+            const data = await response.json();
+            setMemories(data);
+        } else {
+            setMemories([]);
+        }
+    };
+    useEffect(() => {
+        fetchMemories();
+    }, []);
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
+            <header className="w-full max-w-2xl mb-8 flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                    <span className="font-semibold">{userEmail}</span>님, 안녕하세요.
+                </div>
+                <button 
+                    onClick={onLogout}
+                    className="py-1 px-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                    로그아웃
+                </button>
+            </header>
+            <main className="w-full max-w-2xl flex flex-col items-center space-y-8">
+                <MemoryForm onMemoryCreated={fetchMemories} />
+                <div className="w-full">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">기록된 기억들</h2>
+                    {memories === null ? (
+                        <p>기억을 불러오는 중...</p>
+                    ) : (
+                        <MemoriesList memories={memories} />
+                    )}
+                </div>
+            </main>
+        </div>
+    )
+}
+
+
+// --- 최종 메인 페이지 ---
+export default function HomePage() {
+  const [user, setUser] = useState<User | null>(null);
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch('/api/me');
+      const data = await response.json();
+      setUser(data);
+    } catch (error) {
+      console.error('Error checking login status:', error);
+      setUser({ logged_in: false });
+    }
+  };
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/logout', { method: 'POST' }); 
+    checkLoginStatus();
+  }
+
+  if (user === null) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <main>
+      {user.logged_in && user.email ? (
+        <MemorySection userEmail={user.email} onLogout={handleLogout} />
+      ) : (
+        <AuthForm onAuthSuccess={checkLoginStatus} />
+      )}
+    </main>
   );
 }
