@@ -5,7 +5,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
 
-const JWT_SECRET = 'your-very-secret-key-that-should-be-kept-secret';
+// [수정됨] 비밀 키를 .env.local 파일에서 불러오도록 변경
+const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-that-should-be-kept-secret';
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();

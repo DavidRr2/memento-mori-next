@@ -2,12 +2,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client } from '@aws-sdk/client-s3';
-import { createPresignedPost } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuidv4 } from 'uuid'; // 파일 이름 중복을 피하기 위한 라이브러리
-
-// uuid 라이브러리 설치가 필요할 수 있어. 터미널에 아래 명령어를 실행해줘.
-// npm install uuid
-// npm install --save-dev @types/uuid
+// [수정됨] 잘못된 import 경로를 올바른 패키지로 변경!
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   const { filename, contentType } = await request.json();

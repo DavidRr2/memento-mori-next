@@ -3,7 +3,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = 'your-very-secret-key-that-should-be-kept-secret';
+// [수정됨] 비밀 키를 .env.local 파일에서 불러오도록 변경
+const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-that-should-be-kept-secret';
 
 interface UserPayload {
   userId: number;

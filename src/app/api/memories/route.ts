@@ -1,19 +1,16 @@
-// 파일 경로: src/app/api/memories/route.ts (최종 수정본)
+// 파일 경로: src/app/api/memories/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import openDb from '../db'; // 경로를 '../db'로 수정!
-import { promises as fs } from 'fs';
-import path from 'path';
+import openDb from '../db';
 
-const JWT_SECRET = 'your-very-secret-key-that-should-be-kept-secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-that-should-be-kept-secret';
 
 interface UserPayload {
   userId: number;
   email: string;
 }
 
-// ... (이하 내용은 이전과 동일) ...
 async function getUser(request: NextRequest): Promise<UserPayload | null> {
   const token = request.cookies.get('auth_token')?.value;
   if (!token) return null;
@@ -32,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   const db = await openDb();
   const memories = await db.all(
-    "SELECT id, content, image_filename, created_at FROM memories WHERE user_id = ?",
+    "SELECT id, content, image_filename, created_at FROM memories WHERE user_id = ? ORDER BY created_at DESC",
     user.userId
   );
 
@@ -47,24 +44,10 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData();
   const content = formData.get('content') as string;
-  const imageFile = formData.get('image') as File | null;
+  const image_filename = formData.get('image_filename') as string | null;
 
-  if (!content && (!imageFile || imageFile.size === 0)) {
+  if (!content && !image_filename) {
     return NextResponse.json({ error: '내용 또는 이미지가 필요합니다.' }, { status: 400 });
-  }
-
-  let image_filename: string | null = null;
-  if (imageFile && imageFile.size > 0) {
-    const bytes = await imageFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    const filename = `${Date.now()}_${imageFile.name}`;
-    const filepath = path.join(uploadDir, filename);
-    await fs.writeFile(filepath, buffer);
-    image_filename = filename;
   }
 
   const db = await openDb();
