@@ -1,31 +1,14 @@
 // 파일 경로: src/app/api/memories/[id]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import openDb from '../../db';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-that-should-be-kept-secret';
-
-interface UserPayload {
-  userId: number;
-  email: string;
-}
-
-async function getUser(request: NextRequest): Promise<UserPayload | null> {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    return jwt.verify(token, JWT_SECRET) as UserPayload;
-  } catch (error) {
-    return null;
-  }
-}
+import { getUserFromRequest } from '../../_lib/auth';
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getUser(request);
+  const user = getUserFromRequest(request);
   if (!user) {
     return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
   }
@@ -57,7 +40,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getUser(request);
+  const user = getUserFromRequest(request);
   if (!user) {
     return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
   }
