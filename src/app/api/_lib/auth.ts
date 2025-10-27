@@ -14,8 +14,10 @@ if (!jwtSecret) {
   );
 }
 
+const resolvedJwtSecret: string = jwtSecret;
+
 export function getJwtSecret(): string {
-  return jwtSecret;
+  return resolvedJwtSecret;
 }
 
 export function getUserFromRequest(request: NextRequest): UserPayload | null {
@@ -25,7 +27,7 @@ export function getUserFromRequest(request: NextRequest): UserPayload | null {
   }
 
   try {
-    return jwt.verify(token, jwtSecret) as UserPayload;
+    return jwt.verify(token, resolvedJwtSecret) as UserPayload;
   } catch {
     return null;
   }

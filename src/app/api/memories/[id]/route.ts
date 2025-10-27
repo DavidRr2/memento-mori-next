@@ -4,9 +4,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import openDb from '../../db';
 import { getUserFromRequest } from '../../_lib/auth';
 
+type RouteParamsPromise = Promise<Record<string, string | string[] | undefined>>;
+
+async function resolveMemoryId(params: RouteParamsPromise): Promise<string | null> {
+  const resolved = await params;
+  const id = resolved?.id;
+  return typeof id === 'string' ? id : null;
+}
+
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: RouteParamsPromise }
 ) {
   const user = getUserFromRequest(request);
   if (!user) {
@@ -14,7 +22,10 @@ export async function DELETE(
   }
 
   const db = await openDb();
-  const memoryId = params.id;
+  const memoryId = await resolveMemoryId(params);
+  if (!memoryId) {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
 
   const memory = await db.get(
     "SELECT * FROM memories WHERE id = ? AND user_id = ?",
@@ -38,7 +49,7 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: RouteParamsPromise }
 ) {
   const user = getUserFromRequest(request);
   if (!user) {
@@ -46,7 +57,10 @@ export async function PUT(
   }
 
   const db = await openDb();
-  const memoryId = params.id;
+  const memoryId = await resolveMemoryId(params);
+  if (!memoryId) {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
 
   const memory = await db.get(
     "SELECT * FROM memories WHERE id = ? AND user_id = ?",
