@@ -91,23 +91,29 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     );
 
     if (asChild && isValidElement(children)) {
-      const child = children as ReactElement<{ className?: string }>;
-      return cloneElement(
-        child,
-        {
-          className: cn(
-            child.props?.className,
-            "inline-flex items-center justify-center rounded-[var(--radius-md)] font-medium transition-all duration-150 focus-visible:ring-0",
-            variantClasses[variant],
-            sizeClasses[size],
-            stateClasses[computedState],
-            className,
-          ),
-          "data-variant": variant,
-          "data-size": size,
-          "data-state": computedState,
-        } as any,
-      );
+      type ChildProps = {
+        className?: string;
+        "data-variant"?: string;
+        "data-size"?: string;
+        "data-state"?: string;
+      };
+
+      const child = children as ReactElement<ChildProps>;
+      const mergedProps: ChildProps = {
+        className: cn(
+          child.props?.className,
+          "inline-flex items-center justify-center rounded-[var(--radius-md)] font-medium transition-all duration-150 focus-visible:ring-0",
+          variantClasses[variant],
+          sizeClasses[size],
+          stateClasses[computedState],
+          className,
+        ),
+        "data-variant": variant,
+        "data-size": size,
+        "data-state": computedState,
+      };
+
+      return cloneElement(child, mergedProps);
     }
 
     return content;

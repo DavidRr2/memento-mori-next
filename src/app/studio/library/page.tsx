@@ -2,6 +2,7 @@
 
 // 파일 경로: src/app/studio/library/page.tsx
 
+import Image from "next/image";
 import {
   FormEvent,
   useCallback,
@@ -331,13 +332,15 @@ function MemoryComposer({
   );
 
   useEffect(() => {
-    if (availableSections.length === 0) {
-      setSectionInput((previous) => previous || "General");
-      return;
-    }
-    if (!availableSections.includes(sectionInput)) {
-      setSectionInput(availableSections[0]);
-    }
+    setSectionInput((previous) => {
+      if (availableSections.length === 0) {
+        return previous || "General";
+      }
+      if (previous && availableSections.includes(previous)) {
+        return previous;
+      }
+      return availableSections[0];
+    });
   }, [availableSections]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -569,11 +572,16 @@ function EditMemoryModal({
         {memory.image_filename && (
           <div className="space-y-2">
             <p className="text-sm text-[var(--text-muted)]">현재 이미지</p>
-            <img
-              src={composeImageUrl(memory.image_filename)}
-              alt="현재 업로드 이미지"
-              className="w-full rounded-[var(--radius-md)]"
-            />
+            <div className="relative h-48 w-full overflow-hidden rounded-[var(--radius-md)]">
+              <Image
+                src={composeImageUrl(memory.image_filename)}
+                alt="현재 업로드 이미지"
+                fill
+                className="object-cover"
+                unoptimized
+                sizes="(max-width: 768px) 100vw, 400px"
+              />
+            </div>
           </div>
         )}
         <div className="space-y-2 text-sm">
@@ -609,8 +617,8 @@ function deriveSubtitle(content: string) {
   return `${cleaned.slice(0, 100)}…`;
 }
 
-function composeImageUrl(imageKey: string | null) {
-  if (!imageKey) return undefined;
+function composeImageUrl(imageKey: string | null): string {
+  if (!imageKey) return "";
   if (imageKey.startsWith("local/")) {
     return `/uploads/${imageKey.replace(/^local\//, "")}`;
   }

@@ -3,6 +3,7 @@
 // 파일 경로: src/components/memory-player.tsx
 
 import { ReactNode } from "react";
+import Image from "next/image";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,11 +60,18 @@ export function MemoryPlayer({
       <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
         <div className="space-y-4">
           {mode === "photo" && (
-            <div className="overflow-hidden rounded-[var(--radius-lg)] bg-[color:rgba(15,23,42,0.1)]">
+            <div className="relative h-[360px] overflow-hidden rounded-[var(--radius-lg)] bg-[color:rgba(15,23,42,0.1)]">
               {mediaUrl ? (
-                <img src={mediaUrl} alt={title} className="w-full" />
+                <Image
+                  src={mediaUrl}
+                  alt={title}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                  sizes="(max-width: 960px) 100vw, 640px"
+                />
               ) : (
-                <div className="flex h-[360px] items-center justify-center text-sm text-[var(--text-muted)]">
+                <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
                   Photo placeholder
                 </div>
               )}
