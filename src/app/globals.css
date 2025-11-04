@@ -1,3 +1,53 @@
 /* 파일 경로: src/app/globals.css */
 
 @import "tailwindcss";
+
+:root {
+  --bg-default: #F8F8F8;
+  --bg-surface: #FFFFFF;
+  --text-default: #0F172A;
+  --text-muted: #475569;
+  --primary: #334155;
+  --primary-muted: #475569;
+  --accent: #2563EB;
+  --warn: #F59E0B;
+  --success: #16A34A;
+  --border: #E5E7EB;
+  --overlay-scrim: rgba(15, 17, 26, 0.72);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-2xl: 24px;
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --elev-2: 0 4px 10px rgba(0, 0, 0, 0.08);
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-default: #0B1220;
+    --bg-surface: #111827;
+    --text-default: #F8FAFC;
+    --text-muted: #CBD5F5;
+    --border: #1E293B;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background: var(--bg-default);
+    color: var(--text-default);
+    font-family: var(--font-inter), var(--font-noto-sans-kr), -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body,
+  #__next,
+  #__next > main {
+    min-height: 100vh;
+  }
+}

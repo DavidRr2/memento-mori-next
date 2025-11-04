@@ -75,6 +75,7 @@ export async function PUT(
   const formData = await request.formData();
   const content = formData.get('content') as string;
   const image_filename = formData.get('image_filename') as string | null;
+  const section = (formData.get('section') as string | null)?.trim() || 'General';
 
   // 새 이미지가 업로드되면 기존 이미지는 R2에서 삭제해야 함
   const newImageUploaded = formData.has('image_filename') && memory.image_filename !== image_filename;
@@ -83,9 +84,10 @@ export async function PUT(
   }
 
   await db.run(
-    "UPDATE memories SET content = ?, image_filename = ? WHERE id = ?",
+    "UPDATE memories SET content = ?, image_filename = ?, section = ? WHERE id = ?",
     content,
     image_filename,
+    section,
     memoryId
   );
 

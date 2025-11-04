@@ -31,6 +31,15 @@ export default async function openDb(): Promise<Database> {
     );
   `);
 
+  const columns = (await db.all(`PRAGMA table_info(memories);`)) as Array<{
+    name: string;
+  }>;
+  const hasSectionColumn = columns.some((column) => column.name === 'section');
+  if (!hasSectionColumn) {
+    await db.exec(`ALTER TABLE memories ADD COLUMN section TEXT DEFAULT 'General';`);
+    await db.exec(`UPDATE memories SET section = 'General' WHERE section IS NULL;`);
+  }
+
   await db.exec(`
     CREATE INDEX IF NOT EXISTS idx_memories_user_id_created_at
     ON memories (user_id, created_at DESC);
