@@ -5,9 +5,18 @@ import { S3Client } from '@aws-sdk/client-s3';
 // [수정됨] 잘못된 import 경로를 올바른 패키지로 변경!
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { v4 as uuidv4 } from 'uuid';
+import { getUserFromRequest } from '../_lib/auth';
 
 export async function POST(request: NextRequest) {
+  if (!getUserFromRequest(request)) {
+    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
+  }
+
   const { filename, contentType } = await request.json();
+
+  if (typeof filename !== 'string' || filename.trim() === '' || typeof contentType !== 'string' || contentType.trim() === '') {
+    return NextResponse.json({ error: '유효한 파일 이름과 Content-Type이 필요합니다.' }, { status: 400 });
+  }
 
   // .env.local 파일에서 우리 비밀 키들을 불러옴
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;

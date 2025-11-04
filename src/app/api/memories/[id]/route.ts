@@ -1,37 +1,31 @@
 // 파일 경로: src/app/api/memories/[id]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import openDb from '../../db';
+import { getUserFromRequest } from '../../_lib/auth';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-that-should-be-kept-secret';
+type RouteParamsPromise = Promise<Record<string, string | string[] | undefined>>;
 
-interface UserPayload {
-  userId: number;
-  email: string;
-}
-
-async function getUser(request: NextRequest): Promise<UserPayload | null> {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    return jwt.verify(token, JWT_SECRET) as UserPayload;
-  } catch (error) {
-    return null;
-  }
+async function resolveMemoryId(params: RouteParamsPromise): Promise<string | null> {
+  const resolved = await params;
+  const id = resolved?.id;
+  return typeof id === 'string' ? id : null;
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: RouteParamsPromise }
 ) {
-  const user = await getUser(request);
+  const user = getUserFromRequest(request);
   if (!user) {
     return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
   }
 
   const db = await openDb();
-  const memoryId = params.id;
+  const memoryId = await resolveMemoryId(params);
+  if (!memoryId) {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
 
   const memory = await db.get(
     "SELECT * FROM memories WHERE id = ? AND user_id = ?",
@@ -55,15 +49,18 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: RouteParamsPromise }
 ) {
-  const user = await getUser(request);
+  const user = getUserFromRequest(request);
   if (!user) {
     return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
   }
 
   const db = await openDb();
-  const memoryId = params.id;
+  const memoryId = await resolveMemoryId(params);
+  if (!memoryId) {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
 
   const memory = await db.get(
     "SELECT * FROM memories WHERE id = ? AND user_id = ?",
@@ -78,6 +75,7 @@ export async function PUT(
   const formData = await request.formData();
   const content = formData.get('content') as string;
   const image_filename = formData.get('image_filename') as string | null;
+  const section = (formData.get('section') as string | null)?.trim() || 'General';
 
   // 새 이미지가 업로드되면 기존 이미지는 R2에서 삭제해야 함
   const newImageUploaded = formData.has('image_filename') && memory.image_filename !== image_filename;
@@ -86,9 +84,10 @@ export async function PUT(
   }
 
   await db.run(
-    "UPDATE memories SET content = ?, image_filename = ? WHERE id = ?",
+    "UPDATE memories SET content = ?, image_filename = ?, section = ? WHERE id = ?",
     content,
     image_filename,
+    section,
     memoryId
   );
 

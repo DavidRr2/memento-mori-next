@@ -1,15 +1,23 @@
 // 파일 경로: src/app/api/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import openDb from '../db';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
+import openDb from '../db';
+import { getJwtSecret } from '../_lib/auth';
 
-// [수정됨] 비밀 키를 .env.local 파일에서 불러오도록 변경
-const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-that-should-be-kept-secret';
+const JWT_SECRET = getJwtSecret();
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return NextResponse.json(
+      { error: '이메일과 비밀번호를 모두 입력해주세요.' },
+      { status: 400 },
+    );
+  }
+
   const db = await openDb();
   const user = await db.get('SELECT * FROM users WHERE email = ?', email);
 
